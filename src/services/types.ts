@@ -6,13 +6,6 @@ export interface GeoPoint {
   lng: Lng;
 }
 
-export interface apiCRUD{
-  getAll(): Promise<MapPolygonResponse[]>;
-  saveBulk(polygons: MapPolygon[]): Promise<MapPolygonResponse[]>;
-  delete(id: string): Promise<void>;
-  deleteAll?(): Promise<void>;
-}
-
 export interface MapObject {
   id: string;
   geometry: GeoPoint;
