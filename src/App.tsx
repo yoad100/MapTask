@@ -7,9 +7,7 @@ import { DrawingMode } from './services/types';
 import PolygonPanel from './components/Panels/PolygonPanel';
 import ObjectsPanel from './components/Panels/ObjectsPanel';
 import MapDataPanel from './components/Panels/MapDataPanel';
-
-// Lazy load heavy components for better performance
-const MapContainer = lazy(() => import('./components/Map/MapContainer'));
+import MapContainer from './components/Map/MapContainer';
 
 const AppContent: React.FC = observer(() => {
   const { mapStore, polygonStore, objectStore } = useStores();
@@ -42,19 +40,11 @@ const AppContent: React.FC = observer(() => {
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [mapStore]);
 
-  const LoadingFallback = () => (
-    <div className="flex items-center justify-center h-64">
-      <LoadingSpinner />
-    </div>
-  );
-
   return (
     <div className="h-screen flex bg-gray-100">
       {/* Map Panel */}
       <div className="flex-1 relative">
-        <Suspense fallback={<LoadingFallback />}>
-          <MapContainer />
-        </Suspense>
+        <MapContainer />
         
         {mapStore.isLoading && (
           <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[1000]">
@@ -80,11 +70,9 @@ const AppContent: React.FC = observer(() => {
 
       {/* Right Panel */}
       <div className="w-80 bg-white shadow-lg border-l border-gray-200 flex flex-col overflow-hidden">
-        <Suspense fallback={<LoadingFallback />}>
           <PolygonPanel />
           <ObjectsPanel />
           <MapDataPanel />
-        </Suspense>
       </div>
     </div>
   );
