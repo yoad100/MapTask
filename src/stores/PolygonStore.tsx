@@ -90,6 +90,14 @@ export class PolygonStore {
 }
 
   async deletePolygon(id: string) {
+    const beforeLength = this.newPolygons.length;
+    this.newPolygons = this.newPolygons.filter(p => p.id !== id);
+
+    // If new polygon was removed, stop here
+    if (this.newPolygons.length < beforeLength) {
+      this.polygons = this.polygons.filter(p => p.id !== id);
+      return;
+    }
     try {
       this.mapStore.setLoading(true);
       this.mapStore.clearError();

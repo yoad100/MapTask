@@ -69,6 +69,13 @@ export class ObjectStore {
   }
 
   async deleteObject(id: string) {
+    const beforeLength = this.newObjects.length;
+    this.newObjects = this.newObjects.filter(o => o.id !== id);
+    // If new object was removed, stop here
+    if (this.newObjects.length < beforeLength) {
+      this.objects = this.objects.filter(o => o.id !== id);
+      return;
+    }
     try {
       this.mapStore.setLoading(true);
       this.mapStore.clearError();
@@ -97,14 +104,6 @@ export class ObjectStore {
     return this.objects.find(o => o.id === this.mapStore.selectedObjectId) || null;
   }
 
-  get tableData() {
-    return this.objects.map(obj => ({
-      id: obj.id,
-      object: obj.properties.name || `${obj.type} ${obj.id}`,
-      lat: obj.geometry.lat.toFixed(6),
-      lng: obj.geometry.lng.toFixed(6)
-    }));
-  }
   // Bulk save all objects to API
   async saveObjectsToServer() {
     await objectService.saveBulkObjects(this.newObjects);
