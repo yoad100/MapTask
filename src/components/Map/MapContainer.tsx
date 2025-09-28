@@ -105,7 +105,7 @@ const MapContainer: React.FC = observer(() => {
         {/* Render temporary polygon while drawing */}
         {polygonStore.currentDrawingPoints.length >= 3 && (
           <Polygon
-            positions={polygonStore.currentDrawingPoints.map(point => [point.lng,point.lat] as [number, number])}
+            positions={polygonStore.currentDrawingPoints.map(point => [point.lat,point.lng])}
             pathOptions={{
               color: '#ffaa00',
               fillColor: '#ffaa00',
