@@ -37,8 +37,8 @@ export class ObjectStore {
       this.objects = objects.map(obj => ({
         ...obj,
         geometry: {
-          lng: obj.geometry.coordinates[0],  
-          lat: obj.geometry.coordinates[1],  
+          lng: obj.geometry.coordinates.x,  
+          lat: obj.geometry.coordinates.y,  
         },
       }));
     });
@@ -107,6 +107,9 @@ export class ObjectStore {
   // Bulk save all objects to API
   async saveObjectsToServer() {
     await objectService.saveBulkObjects(this.newObjects);
+    runInAction(() => {
+      this.newObjects = [];
+    });
     return true;
   }
 }

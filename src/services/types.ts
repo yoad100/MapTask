@@ -6,6 +6,12 @@ export interface GeoPoint {
   lng: Lng;
 }
 
+export interface GeoCoordinatesResponse {
+  values: [Lng, Lat],
+  x:Lng,
+  y:Lat;
+}
+
 export interface MapObject {
   id: string;
   geometry: GeoPoint;
@@ -29,7 +35,7 @@ export interface MapObjectResponse {
   id: string;
   geometry: {
     type: "Point";
-    coordinates: [Lng,Lat]; 
+    coordinates: GeoCoordinatesResponse; 
   }
   type: "Feature";
    properties: {
@@ -64,13 +70,23 @@ export interface MapPolygonRequest {
 export interface MapPolygonResponse {
   id: string;
   type: "Feature";
-  geometry: { 
-    type: "Polygon";
-    coordinates: number[][][]; // [[[lng, lat], [lng, lat], ...]]
-  }
+  geometry: {
+    boundingBox: null | any;
+    coordinateReferenceSystem: null | any;
+    coordinates: {
+      exterior: {
+        positions: GeoCoordinatesResponse[];
+      };
+      holes: {
+        positions: GeoCoordinatesResponse[];
+      }[];
+    };
+    extraMembers: null | any;
+    type: number; // 8 = Polygon
+  };
   properties: {
     name: string;
-  }
+  };
 }
 
 export enum DrawingMode {
