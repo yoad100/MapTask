@@ -17,19 +17,14 @@ const ObjectsPanel: React.FC = observer(() => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const promises: Promise<boolean>[] = [];
       if (objectStore.newObjects.length > 0) {
-        promises.push(objectStore.saveObjectsToServer());
+        await objectStore.loadObjects(await objectStore.saveObjectsToServer());
       }
 
       if (polygonStore.newPolygons.length > 0) {
-        promises.push(polygonStore.savePolygonsToServer());
+        await polygonStore.loadPolygons(await polygonStore.savePolygonsToServer());
       }
 
-      await Promise.all(promises);
-
-      await objectStore.loadObjects();
-      await polygonStore.loadPolygons();
     } finally {
       setIsSaving(false);
     }

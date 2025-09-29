@@ -1,5 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { MapPolygon, GeoPoint } from "../services/types";
+import { MapPolygon, GeoPoint, MapPolygonResponse } from "../services/types";
 import { polygonService } from "../services/PolygonService";
 import { MapStore } from "./MapStore";
 
@@ -12,12 +12,12 @@ export class PolygonStore {
     makeAutoObservable(this);
   }
 
-  async loadPolygons() {
+  async loadPolygons(loadedPolygons?: MapPolygonResponse[]) {
     try {
       this.mapStore.setLoading(true);
       this.mapStore.clearError();
 
-      const polygons = await polygonService.getAll();
+      const polygons = loadedPolygons ?? await polygonService.getAll();
 
       runInAction(() => {
         this.polygons = polygons.map((poly) => {
@@ -178,10 +178,10 @@ export class PolygonStore {
 
   // Bulk save all polygons to API
   async savePolygonsToServer() {
-    await polygonService.saveBulkPolygons(this.newPolygons);
+    const loadedPolygons = await polygonService.saveBulkPolygons(this.newPolygons);
     runInAction(() => {
       this.newPolygons = [];
     });
-    return true;
+    return loadedPolygons;
   }
 }

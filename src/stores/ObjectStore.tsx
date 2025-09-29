@@ -1,23 +1,25 @@
-
-
-import { makeAutoObservable, runInAction } from 'mobx';
-import { MapObject, GeoPoint } from '../services/types';
-import { objectService } from '../services/ObjectService';
-import { MapStore } from './MapStore';
+import { makeAutoObservable, runInAction } from "mobx";
+import {
+  MapObject,
+  GeoPoint,
+  MapObjectRequest,
+  MapObjectResponse,
+} from "../services/types";
+import { objectService } from "../services/ObjectService";
+import { MapStore } from "./MapStore";
 
 export class ObjectStore {
   objects: MapObject[] = [];
   newObjects: MapObject[] = [];
-  selectedObjectType: string = 'marker';
+  selectedObjectType: string = "marker";
   iconBank: { [key: string]: string } = {
-    marker: '📍',
-    jeep: '🚙',
-    house: '🏠',
-    flag: '🚩',
-    tree: '🌳',
+    marker: "📍",
+    jeep: "🚙",
+    house: "🏠",
+    flag: "🚩",
+    tree: "🌳",
   };
-  selectedIcon: string = this.iconBank['marker']; // default icon
-  
+  selectedIcon: string = this.iconBank["marker"]; // default icon
 
   addIconToBank(type: string, icon: string) {
     this.iconBank[type] = icon;
@@ -27,41 +29,45 @@ export class ObjectStore {
     makeAutoObservable(this);
   }
 
-  async loadObjects() {
-  try {
-    this.mapStore.setLoading(true);
-    this.mapStore.clearError();
+  async loadObjects(loadedObjects?: MapObjectResponse[]) {
+    try {
+      runInAction(() => {
+        this.mapStore.setLoading(true);
+        this.mapStore.clearError();
+      });
 
-    const objects = await objectService.getAll(); // returns MapObjectResponse[]
-    runInAction(() => {
-      this.objects = objects.map(obj => ({
-        ...obj,
-        geometry: {
-          lng: obj.geometry.coordinates.x,  
-          lat: obj.geometry.coordinates.y,  
-        },
-      }));
-    });
-  } catch (error) {
-    runInAction(() => {
-      this.mapStore.setError(error instanceof Error ? error.message : 'Failed to load objects');
-    });
-  } finally {
-    runInAction(() => {
-      this.mapStore.setLoading(false);
-    });
+      const objects = loadedObjects ?? (await objectService.getAll()); // returns MapObjectResponse[]
+      runInAction(() => {
+        this.objects = objects.map((obj) => ({
+          ...obj,
+          geometry: {
+            lng: obj.geometry.coordinates.x,
+            lat: obj.geometry.coordinates.y,
+          },
+        }));
+      });
+    } catch (error) {
+      runInAction(() => {
+        this.mapStore.setError(
+          error instanceof Error ? error.message : "Failed to load objects"
+        );
+      });
+    } finally {
+      runInAction(() => {
+        this.mapStore.setLoading(false);
+      });
+    }
   }
-}
 
   addObjectLocal(geometry: GeoPoint, type: "Feature", symbol: string) {
     const newObject: MapObject = {
       id: `${Date.now()}-${Math.random()}`,
       geometry,
       type,
-      properties:{
+      properties: {
         symbol,
         name: `${this.selectedObjectType} ${this.objects.length + 1}`,
-      }
+      },
     };
     this.newObjects.push(newObject);
     this.objects.push(newObject);
@@ -70,10 +76,10 @@ export class ObjectStore {
 
   async deleteObject(id: string) {
     const beforeLength = this.newObjects.length;
-    this.newObjects = this.newObjects.filter(o => o.id !== id);
+    this.newObjects = this.newObjects.filter((o) => o.id !== id);
     // If new object was removed, stop here
     if (this.newObjects.length < beforeLength) {
-      this.objects = this.objects.filter(o => o.id !== id);
+      this.objects = this.objects.filter((o) => o.id !== id);
       return;
     }
     try {
@@ -83,14 +89,16 @@ export class ObjectStore {
       await objectService.delete(id);
 
       runInAction(() => {
-        this.objects = this.objects.filter(o => o.id !== id);
+        this.objects = this.objects.filter((o) => o.id !== id);
         if (this.mapStore.selectedObjectId === id) {
           this.mapStore.setSelectedObject(null);
         }
       });
     } catch (error) {
       runInAction(() => {
-        this.mapStore.setError(error instanceof Error ? error.message : 'Failed to delete object');
+        this.mapStore.setError(
+          error instanceof Error ? error.message : "Failed to delete object"
+        );
       });
     } finally {
       runInAction(() => {
@@ -99,17 +107,18 @@ export class ObjectStore {
     }
   }
 
-
   get selectedObject(): MapObject | null {
-    return this.objects.find(o => o.id === this.mapStore.selectedObjectId) || null;
+    return (
+      this.objects.find((o) => o.id === this.mapStore.selectedObjectId) || null
+    );
   }
 
   // Bulk save all objects to API
   async saveObjectsToServer() {
-    await objectService.saveBulkObjects(this.newObjects);
+    const loadedObjects = await objectService.saveBulkObjects(this.newObjects);
     runInAction(() => {
       this.newObjects = [];
     });
-    return true;
+    return loadedObjects;
   }
 }
